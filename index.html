@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Video Prompt Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E1117; --panel:#161B24; --panel2:#1D2430; --panel3:#222B38;
+  --border:#2A3340; --border2:#374355;
+  --text:#E6EAF0; --muted:#8A94A6; --faint:#5B6677;
+  --gold:#E8B04B; --gold-dim:#9A7427;
+  --cyan:#4FD1E0; --cyan-dim:#2A6E78;
+  --danger:#E5654B; --success:#5BC98C;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"IBM Plex Sans Thai",sans-serif;
+  font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--gold);color:#1a1205}
+/* scrollbar */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;border:2px solid var(--bg)}
+*::-webkit-scrollbar-thumb:hover{background:#48566b}
+
+/* ---------- HEADER ---------- */
+header{
+  position:sticky;top:0;z-index:40;
+  background:rgba(14,17,23,.9);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:14px 22px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:11px}
+.brand .logo{
+  width:34px;height:34px;border-radius:8px;flex:none;
+  background:linear-gradient(135deg,var(--gold),#c98a1f);
+  display:grid;place-items:center;color:#1a1205;font-weight:700;font-size:18px;
+  font-family:"Space Grotesk";box-shadow:0 0 0 1px rgba(232,176,75,.3),0 4px 14px rgba(232,176,75,.2)}
+.brand h1{font-family:"Space Grotesk";font-size:16px;font-weight:600;letter-spacing:.3px;line-height:1.1}
+.brand .sub{font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.head-controls{display:flex;align-items:center;gap:14px;margin-left:auto;flex-wrap:wrap}
+.ctl-group{display:flex;flex-direction:column;gap:4px}
+.ctl-group>span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding-left:2px}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.seg button{
+  background:transparent;border:0;color:var(--muted);cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:500;padding:5px 11px;border-radius:6px;transition:.12s}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:var(--panel3);color:var(--gold);box-shadow:inset 0 0 0 1px var(--border2)}
+.seg.cyan button.on{color:var(--cyan)}
+
+/* ---------- LAYOUT ---------- */
+.shell{display:grid;grid-template-columns:1fr 460px;gap:0;align-items:start}
+.builder{padding:22px;min-width:0}
+.output{
+  position:sticky;top:65px;height:calc(100vh - 65px);
+  border-left:1px solid var(--border);background:var(--panel);
+  display:flex;flex-direction:column;overflow:hidden}
+
+/* preset bar */
+.presetbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.preset{
+  background:var(--panel);border:1px solid var(--border);border-radius:9px;
+  padding:11px 14px;cursor:pointer;text-align:left;transition:.14s;min-width:124px;color:var(--text);font-family:inherit}
+.preset:hover{border-color:var(--border2);background:var(--panel2)}
+.preset.on{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,176,75,.1),transparent)}
+.preset .pi{font-size:18px;margin-bottom:4px;display:block}
+.preset .pt{font-size:12.5px;font-weight:600}
+.preset .pd{font-size:10.5px;color:var(--muted);margin-top:1px}
+
+/* sections */
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.sec-head{
+  display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none}
+.sec-head .ix{
+  font-family:"IBM Plex Mono";font-size:11px;color:var(--gold);
+  border:1px solid var(--gold-dim);border-radius:5px;padding:1px 6px;flex:none}
+.sec-head h2{font-size:13.5px;font-weight:600;letter-spacing:.2px;flex:1}
+.sec-head .hint{font-size:11px;color:var(--muted);font-weight:400}
+.sec-head .chev{color:var(--muted);transition:.2s;font-size:12px}
+.sec.closed .chev{transform:rotate(-90deg)}
+.sec.closed .sec-body{display:none}
+.sec-body{padding:4px 16px 18px;border-top:1px solid var(--border)}
+
+/* fields */
+.row{display:grid;gap:13px;margin-top:14px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.3px}
+.field>label .req{color:var(--gold)}
+input[type=text],input[type=number],textarea,select{
+  width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:13px;padding:9px 11px;transition:.12s;outline:none}
+textarea{resize:vertical;min-height:64px;line-height:1.55}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(79,209,224,.12)}
+input.warn,textarea.warn{border-color:var(--gold-dim)}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%238A94A6' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+::placeholder{color:#566072}
+
+/* chip-list (atmosphere / effects) */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--panel2);
+  border:1px solid var(--border);border-radius:7px;padding:5px 8px 5px 11px;font-size:12px}
+.chip button{background:none;border:0;color:var(--faint);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+.chip button:hover{color:var(--danger)}
+.addline{display:flex;gap:8px;margin-top:9px}
+.addline input{flex:1}
+
+/* toggle checkboxes (hud) */
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.check{
+  display:inline-flex;align-items:center;gap:8px;background:var(--panel2);
+  border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;transition:.12s;user-select:none}
+.check:hover{border-color:var(--border2)}
+.check.on{border-color:var(--cyan-dim);background:rgba(79,209,224,.08);color:var(--cyan)}
+.check .box{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--border2);display:grid;place-items:center;flex:none;transition:.12s}
+.check.on .box{background:var(--cyan);border-color:var(--cyan)}
+.check.on .box::after{content:"✓";color:#0c1418;font-size:11px;font-weight:700}
+
+/* switch */
+.switch{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.switch .track{width:40px;height:22px;border-radius:11px;background:var(--panel3);border:1px solid var(--border2);position:relative;transition:.16s;flex:none}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:.16s}
+.switch.on .track{background:rgba(79,209,224,.25);border-color:var(--cyan)}
+.switch.on .track::after{left:20px;background:var(--cyan)}
+
+/* shots */
+.shot{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-top:12px;overflow:hidden;position:relative}
+.shot::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);opacity:.5}
+.shot-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel2)}
+.shot-num{
+  font-family:"IBM Plex Mono";font-weight:600;font-size:12px;color:var(--bg);
+  background:var(--gold);border-radius:6px;width:26px;height:24px;display:grid;place-items:center;flex:none}
+.shot-head input.shot-title{flex:1;background:transparent;border:0;padding:4px 2px;font-weight:600;font-size:13px}
+.shot-head input.shot-title:focus{box-shadow:none;border-bottom:1px solid var(--cyan)}
+.shot-ops{display:flex;gap:3px}
+.iconbtn{
+  background:var(--panel3);border:1px solid var(--border);color:var(--muted);
+  width:28px;height:28px;border-radius:6px;cursor:pointer;display:grid;place-items:center;font-size:13px;transition:.12s;font-family:inherit}
+.iconbtn:hover{color:var(--text);border-color:var(--border2)}
+.iconbtn.del:hover{color:var(--danger);border-color:var(--danger)}
+.iconbtn:disabled{opacity:.3;cursor:not-allowed}
+.shot-body{padding:13px}
+.shot-meta{display:grid;grid-template-columns:90px 1fr;gap:9px;margin-top:11px}
+.shot-foot{display:flex;align-items:center;gap:10px;margin-top:11px;flex-wrap:wrap}
+.dur{display:flex;align-items:center;gap:7px}
+.dur input{width:64px}
+.dur span{font-size:11px;color:var(--muted)}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid var(--border2);background:var(--panel2);color:var(--text);
+  font-family:inherit;font-size:13px;font-weight:500;padding:9px 15px;border-radius:8px;cursor:pointer;transition:.13s}
+.btn:hover{background:var(--panel3);border-color:#48566b}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#1a1205;font-weight:600}
+.btn.gold:hover{background:#f0bd5e}
+.btn.ghost{background:transparent}
+.btn.block{width:100%}
+.btn.sm{padding:7px 12px;font-size:12px}
+.addshot{width:100%;margin-top:13px;border-style:dashed;color:var(--muted)}
+.addshot:hover{color:var(--gold);border-color:var(--gold-dim)}
+
+/* ---------- OUTPUT PANEL ---------- */
+.out-tabs{display:flex;padding:14px 16px 0;gap:4px;border-bottom:1px solid var(--border);flex:none}
+.out-tabs button{
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:8px 12px;cursor:pointer;transition:.12s;margin-bottom:-1px}
+.out-tabs button:hover{color:var(--text)}
+.out-tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* timeline */
+.timeline{padding:13px 16px;border-bottom:1px solid var(--border);flex:none}
+.tl-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.tl-meta .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.tl-meta .total{font-family:"IBM Plex Mono";font-size:12px;color:var(--cyan)}
+.tl-strip{display:flex;gap:3px;height:34px}
+.tl-seg{
+  position:relative;border-radius:5px;background:linear-gradient(180deg,var(--panel3),var(--panel2));
+  border:1px solid var(--border2);display:grid;place-items:center;min-width:24px;overflow:hidden;cursor:default}
+.tl-seg span{font-family:"IBM Plex Mono";font-size:10px;color:var(--gold);position:relative;z-index:1}
+.tl-seg::before{content:"";position:absolute;inset:0;background:var(--gold);opacity:.1}
+.tl-empty{font-size:11px;color:var(--faint);align-self:center}
+
+/* output body */
+.out-body{flex:1;overflow:auto;padding:0}
+.warnbar{
+  margin:12px 16px 0;background:rgba(232,176,75,.08);border:1px solid var(--gold-dim);
+  border-radius:8px;padding:9px 12px;font-size:11.5px;color:var(--gold);display:none}
+.warnbar.show{display:block}
+.warnbar b{font-weight:600}
+pre.code{
+  font-family:"IBM Plex Mono";font-size:11.5px;line-height:1.6;color:var(--text);
+  padding:16px;white-space:pre-wrap;word-break:break-word;margin:0}
+.code .k{color:var(--cyan)}
+.code .s{color:#A8D08B}
+.code .n{color:var(--gold)}
+.code .b{color:#C58FE0}
+.textprompt{padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+
+/* shot-by-shot list in output */
+.clip{border-bottom:1px solid var(--border)}
+.clip-head{display:flex;align-items:center;gap:9px;padding:11px 16px;background:var(--panel2)}
+.clip-head .cn{font-family:"IBM Plex Mono";font-size:11px;color:var(--gold)}
+.clip-head .ct{flex:1;font-size:12.5px;font-weight:600}
+.clip-head .cd{font-family:"IBM Plex Mono";font-size:11px;color:var(--cyan)}
+.clip pre{font-family:"IBM Plex Mono";font-size:11px;line-height:1.55;padding:12px 16px;white-space:pre-wrap;word-break:break-word;color:var(--muted)}
+
+/* output footer */
+.out-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex:none;background:var(--panel)}
+.out-foot .btn{flex:1}
+
+/* presets store */
+.presets-store{margin-top:8px}
+.pstore-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:170px;overflow:auto}
+.pstore-item{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 11px}
+.pstore-item .pn{flex:1;font-size:12.5px;font-weight:500}
+.pstore-item .pmeta{font-size:10.5px;color:var(--muted);font-family:"IBM Plex Mono"}
+.empty-note{font-size:12px;color:var(--faint);padding:14px 0;text-align:center}
+
+/* toast */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel3);border:1px solid var(--border2);color:var(--text);
+  padding:11px 18px;border-radius:10px;font-size:13px;font-weight:500;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.22s;z-index:90;display:flex;align-items:center;gap:9px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+
+.muted-link{color:var(--cyan);cursor:pointer;font-size:12px}
+.muted-link:hover{text-decoration:underline}
+.section-actions{display:flex;gap:8px;margin-top:13px}
+
+/* responsive */
+@media(max-width:1080px){
+  .shell{grid-template-columns:1fr}
+  .output{position:static;height:auto;max-height:80vh;border-left:0;border-top:1px solid var(--border)}
+  .row.c2,.row.c3{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">▶</div>
+    <div>
+      <h1>AI Video Prompt Builder</h1>
+      <div class="sub">Cinematic JSON Generator</div>
+    </div>
+  </div>
+  <div class="head-controls">
+    <div class="ctl-group">
+      <span>Aspect</span>
+      <div class="seg" id="aspectSeg">
+        <button data-a="16:9" class="on">16:9</button>
+        <button data-a="9:16">9:16</button>
+        <button data-a="1:1">1:1</button>
+      </div>
+    </div>
+    <div class="ctl-group">
+      <span>ภาษา Output</span>
+      <div class="seg cyan" id="langSeg">
+        <button data-l="thai">ไทย</button>
+        <button data-l="english">EN</button>
+        <button data-l="mixed" class="on">ผสม</button>
+      </div>
+    </div>
+    <div class="ctl-group">
+      <span>ไฟล์</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm" id="importBtn">วาง JSON</button>
+        <button class="btn sm" id="exportBtn">.json</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <!-- ================= BUILDER ================= -->
+  <main class="builder">
+    <div class="presetbar" id="presetbar"></div>
+    <div id="form"></div>
+  </main>
+
+  <!-- ================= OUTPUT ================= -->
+  <aside class="output">
+    <div class="out-tabs" id="outTabs">
+      <button data-t="json" class="on">JSON</button>
+      <button data-t="shots">ทีละช็อต</button>
+      <button data-t="text">Prompt ข้อความ</button>
+      <button data-t="presets">งานที่เก็บ</button>
+    </div>
+
+    <div class="timeline" id="timeline">
+      <div class="tl-meta">
+        <span class="lbl">Shot Timeline</span>
+        <span class="total" id="totalDur">0s</span>
+      </div>
+      <div class="tl-strip" id="tlStrip"></div>
+    </div>
+
+    <div class="warnbar" id="warnbar"></div>
+    <div class="out-body" id="outBody"></div>
+
+    <div class="out-foot" id="outFoot"></div>
+  </aside>
+</div>
+
+<div id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+<input type="file" id="fileInput" accept=".json" style="display:none">
+
+<script>
+"use strict";
+
+/* ============ PRESET DEFINITIONS ============ */
+const ICONS={fatality:"🥊",ad:"🍜",story:"🎬",music:"🎵",ugc:"📱"};
+const PRESETS={
+  fatality:{
+    label:"Fighting / Fatality", desc:"เกมต่อสู้ ท่าจบอลังการ",
+    style:{visual_quality:"Ultra-realistic AAA",engine:"Unreal Engine 5",genre:"Fighting Game Fantasy",camera:"Cinematic Fighting Game",fps:60},
+    aspect:"16:9",
+    env:{location:"เยาวราชนีออนยามค่ำคืน",weather:"ถนนเปียกฝน",atmosphere:["ไอน้ำลอยจากร้านอาหาร","แสงนีออนสะท้อนพื้น","ผู้คนยืนดูสองข้าง"]},
+    hud:{enabled:true,elements:["Health Bars","Character Portraits","Combo Counter","Damage Numbers"]},
+    chars:{mode:"versus",left:{name:"ตัวละครซ้าย",description:""},right:{name:"ตัวละครขวา",description:""}},
+    shots:[
+      {title:"เปิดฉากปะทะ",description:"ตัวละครซ้ายพุ่งเข้าใส่ ฟาดอาวุธประจำตัวเต็มแรง",duration:5,camera:"Dolly in fast",audio:"เสียงกระแทกหนัก",counter:5,effects:["ประกายไฟ"]},
+      {title:"คอมโบต่อเนื่อง",description:"ฟาดต่อเนื่องหลายครั้ง ส่งคู่ต่อสู้ลอยกระเด็น",duration:6,camera:"Tracking shot",audio:"เสียงคอมโบรัว",counter:20,effects:["คลื่นกระแทก"]},
+      {title:"FINISH HIM",description:"คู่ต่อสู้มึนงงสู้ไม่ได้ ประกาศ FINISH HIM กล้องซูมสุด เวลาหยุดนิ่ง",duration:4,camera:"Extreme zoom, world freeze",audio:"Announcer: FINISH HIM",counter:0,effects:["HUD จางหาย","ฝนหยุด"]},
+      {title:"Fatality ท่าจบ",description:"ท้องฟ้าเปลี่ยนสี อาวุธยักษ์โผล่จากใต้เมือง จัดการคู่ต่อสู้อย่างอลังการ",duration:8,camera:"Epic crane up",audio:"Announcer: FATALITY",counter:200,effects:["คลื่นพลังสีทอง","เมืองเรืองแสง"]}
+    ],
+    ending:{description:"ไอน้ำจางหาย ผู้ชนะยืนเด่นกลางเมือง",pose:["ยืนชูมือ","ท่าผู้ชนะ"],announcer:["PLAYER WINS","FATALITY"],final_frame:"CUT TO BLACK"}
+  },
+  ad:{
+    label:"โฆษณามาสคอต", desc:"สินค้า/แบรนด์ มาสคอต",
+    style:{visual_quality:"Ultra-realistic AAA",engine:"Unreal Engine 5",genre:"Brand Mascot Commercial",camera:"Dynamic Commercial",fps:30},
+    aspect:"16:9",
+    env:{location:"ร้าน/สถานที่ของแบรนด์",weather:"แสงสว่างสดใส",atmosphere:["โทนสีแบรนด์เด่นชัด","บรรยากาศน่าสนใจ"]},
+    hud:{enabled:false,elements:[]},
+    chars:{mode:"single",subject:{name:"มาสคอตแบรนด์",description:""}},
+    shots:[
+      {title:"Hook 3 วิแรก",description:"มาสคอตปรากฏตัวสะดุดตา ดึงความสนใจทันที",duration:3,camera:"Punch-in",audio:"เพลงจังหวะสนุก",counter:0,effects:["โลโก้แวบ"]},
+      {title:"นำเสนอสินค้า",description:"โชว์จุดเด่นของสินค้าอย่างชัดเจน น่าซื้อ",duration:5,camera:"Smooth orbit",audio:"เสียงบรรยายสั้น",counter:0,effects:[]},
+      {title:"Call to action",description:"มาสคอตชี้ชวน พร้อมข้อความปิดท้ายและโลโก้",duration:4,camera:"Pull back to logo",audio:"สโลแกนแบรนด์",counter:0,effects:["โลโก้เด่น"]}
+    ],
+    ending:{description:"จบที่โลโก้แบรนด์ พร้อมสโลแกน",pose:["มาสคอตยืนข้างโลโก้"],announcer:[],final_frame:"Logo lockup"}
+  },
+  story:{
+    label:"เล่าเรื่อง / หนังสั้น", desc:"narrative มีอารมณ์",
+    style:{visual_quality:"Cinematic film grade",engine:"Photorealistic",genre:"Short Film Drama",camera:"Cinematic film",fps:24},
+    aspect:"16:9",
+    env:{location:"สถานที่ในเรื่อง",weather:"บรรยากาศตามอารมณ์ฉาก",atmosphere:["แสงเล่าอารมณ์","โทนสีภาพยนตร์"]},
+    hud:{enabled:false,elements:[]},
+    chars:{mode:"single",subject:{name:"ตัวเอก",description:""}},
+    shots:[
+      {title:"Establishing",description:"เปิดเรื่องด้วยภาพกว้างบอกสถานที่และอารมณ์",duration:5,camera:"Wide establishing",audio:"เพลงประกอบเบาๆ",counter:0,effects:[]},
+      {title:"พัฒนาเรื่อง",description:"ตัวเอกเผชิญสถานการณ์ เผยอารมณ์",duration:6,camera:"Slow push-in",audio:"เสียงบรรยากาศ",counter:0,effects:[]},
+      {title:"จุดพีค",description:"ช่วงสำคัญที่สุดของเรื่อง อารมณ์พุ่งสูง",duration:5,camera:"Handheld close-up",audio:"ดนตรีพีค",counter:0,effects:[]},
+      {title:"คลี่คลาย",description:"ฉากปิดที่ทิ้งความรู้สึกไว้กับผู้ชม",duration:5,camera:"Crane out",audio:"เพลงปิด",counter:0,effects:[]}
+    ],
+    ending:{description:"เฟรมจบที่ทิ้งอารมณ์ค้าง",pose:[],announcer:[],final_frame:"Fade to black"}
+  },
+  music:{
+    label:"Music Video", desc:"จังหวะ ภาพสไตล์จัด",
+    style:{visual_quality:"Stylized cinematic",engine:"Photorealistic + VFX",genre:"Music Video",camera:"Rhythmic dynamic",fps:30},
+    aspect:"16:9",
+    env:{location:"ฉากสไตล์จัดตามเพลง",weather:"แสงสีจัดจ้าน",atmosphere:["แสงสีตามบีต","บรรยากาศมีสไตล์"]},
+    hud:{enabled:false,elements:[]},
+    chars:{mode:"single",subject:{name:"ศิลปิน/ตัวแสดง",description:""}},
+    shots:[
+      {title:"Intro บีตเปิด",description:"ภาพเปิดเข้าจังหวะเพลง สร้างโทน",duration:4,camera:"Beat-synced cuts",audio:"อินโทรเพลง",counter:0,effects:["แสงแฟลชตามบีต"]},
+      {title:"ท่อน Verse",description:"ภาพเล่าเรื่องตามเนื้อเพลง",duration:6,camera:"Smooth tracking",audio:"ท่อน verse",counter:0,effects:[]},
+      {title:"ท่อนฮุก",description:"ภาพพีคพลังสูง สีจัด ตรงจังหวะฮุก",duration:6,camera:"Dynamic spins",audio:"ท่อนฮุก",counter:0,effects:["สีระเบิด","สโลว์โมชัน"]}
+    ],
+    ending:{description:"เฟรมจบเท่ๆ ค้างจังหวะสุดท้าย",pose:[],announcer:[],final_frame:"Freeze frame"}
+  },
+  ugc:{
+    label:"Lifestyle / UGC", desc:"แนวตั้ง คอนเทนต์สั้น",
+    style:{visual_quality:"Natural realistic",engine:"Photorealistic",genre:"Lifestyle UGC",camera:"Handheld authentic",fps:30},
+    aspect:"9:16",
+    env:{location:"สถานที่ในชีวิตจริง",weather:"แสงธรรมชาติ",atmosphere:["ดูเรียลเป็นธรรมชาติ","ไม่จัดฉากเกินไป"]},
+    hud:{enabled:false,elements:[]},
+    chars:{mode:"single",subject:{name:"ผู้พูด/รีวิว",description:""}},
+    shots:[
+      {title:"Hook พูดเปิด",description:"พูดเปิดดึงให้คนหยุดดูใน 3 วิแรก",duration:3,camera:"Selfie handheld",audio:"พูดเปิดประเด็น",counter:0,effects:[]},
+      {title:"เนื้อหา/รีวิว",description:"โชว์/อธิบายสิ่งที่จะสื่อแบบเป็นกันเอง",duration:6,camera:"Handheld B-roll",audio:"เสียงพูดอธิบาย",counter:0,effects:[]},
+      {title:"ปิดท้าย CTA",description:"สรุปและชวนกด follow / ลองใช้",duration:4,camera:"Back to selfie",audio:"ชวนติดตาม",counter:0,effects:[]}
+    ],
+    ending:{description:"เฟรมจบพร้อมข้อความชวนติดตาม",pose:[],announcer:[],final_frame:"Text card"}
+  }
+};
+
+/* dropdown option banks */
+const OPT={
+  quality:["Ultra-realistic AAA","Cinematic film grade","Stylized cinematic","Natural realistic","Anime / Stylized","Hyperrealistic"],
+  engine:["Unreal Engine 5","Photorealistic","Photorealistic + VFX","Octane render","3D animated"],
+  camera:["Dolly in fast","Tracking shot","Slow push-in","Handheld close-up","Wide establishing","Crane up","Crane out","Orbit / arc","Extreme zoom","Punch-in","Beat-synced cuts","Selfie handheld","Static locked"],
+  fps:[24,30,60],
+  hudOpts:["Health Bars","Character Portraits","Special Meters","Combo Counter","Damage Numbers","Score","Timer","Round Indicator"]
+};
+
+/* ============ STATE ============ */
+let state=null;
+let activePreset="fatality";
+let outTab="json";
+let copyMode="combined"; // combined | per-shot (handled by tab)
+let uid=0; const nextId=()=>"s"+(++uid);
+
+function deepClone(o){return JSON.parse(JSON.stringify(o))}
+
+function loadPreset(key){
+  activePreset=key;
+  const p=PRESETS[key];
+  state={
+    preset:key,
+    title:"",
+    language:state?state.language:"mixed",
+    style:deepClone(p.style),
+    aspect:p.aspect,
+    environment:deepClone(p.env),
+    hud:deepClone(p.hud),
+    characters:deepClone(p.chars),
+    consistency:"",
+    negative:"ห้ามนิ้วเกิน, ห้ามตัวหนังสือเพี้ยน, ห้ามภาพเบลอ, ห้ามใบหน้าผิดรูป",
+    shots:p.shots.map(s=>Object.assign({id:nextId(),effects:[]},deepClone(s))),
+    ending:deepClone(p.ending)
+  };
+  // sync header segs
+  setSeg("aspectSeg","a",state.aspect);
+  setSeg("langSeg","l",state.language);
+  renderAll();
+}
+
+function setSeg(id,attr,val){
+  document.querySelectorAll("#"+id+" button").forEach(b=>{
+    b.classList.toggle("on",b.dataset[attr]===String(val));
+  });
+}
+
+/* ============ RENDER: PRESET BAR ============ */
+function renderPresetBar(){
+  const bar=document.getElementById("presetbar");
+  bar.innerHTML="";
+  Object.entries(PRESETS).forEach(([k,p])=>{
+    const b=document.createElement("button");
+    b.className="preset"+(k===activePreset?" on":"");
+    b.innerHTML=`<span class="pi">${ICONS[k]}</span><span class="pt">${p.label}</span><span class="pd">${p.desc}</span>`;
+    b.onclick=()=>{
+      if(k===activePreset)return;
+      if(confirm("เปลี่ยน preset จะโหลดโครงใหม่ทับของเดิม (Save งานก่อนถ้ายังไม่เก็บ)\nยืนยันเปลี่ยนเป็น \""+p.label+"\"?")){
+        loadPreset(k);
+      }
+    };
+    bar.appendChild(b);
+  });
+}
+
+/* ============ RENDER: FORM ============ */
+function sec(ix,title,hint,bodyHTML,open=true){
+  return `<div class="sec${open?"":" closed"}" data-sec>
+    <div class="sec-head" onclick="toggleSec(this)">
+      <span class="ix">${ix}</span><h2>${title}</h2>
+      <span class="hint">${hint||""}</span><span class="chev">▼</span>
+    </div>
+    <div class="sec-body">${bodyHTML}</div>
+  </div>`;
+}
+function toggleSec(el){el.closest("[data-sec]").classList.toggle("closed")}
+
+function renderForm(){
+  const s=state;
+  const f=document.getElementById("form");
+  const isVersus=s.characters.mode==="versus";
+
+  let html="";
+
+  /* GENERAL */
+  html+=sec("01","General & Style","ภาพรวมงาน",`
+    <div class="row">
+      <div class="field">
+        <label>ชื่อเรื่อง / Title <span class="req">*</span></label>
+        <input type="text" id="f_title" placeholder="เช่น Mortal Kombat Fatality - บาบีก้อน vs ตี๋น้อย" value="${esc(s.title)}">
+      </div>
+    </div>
+    <div class="row c2">
+      <div class="field"><label>คุณภาพภาพ</label>${selectHTML("f_quality",OPT.quality,s.style.visual_quality)}</div>
+      <div class="field"><label>Engine / Render</label>${selectHTML("f_engine",OPT.engine,s.style.engine)}</div>
+    </div>
+    <div class="row c3">
+      <div class="field"><label>Genre</label><input type="text" id="f_genre" value="${esc(s.style.genre)}"></div>
+      <div class="field"><label>มุมกล้องรวม</label>${selectHTML("f_camera",OPT.camera,s.style.camera)}</div>
+      <div class="field"><label>FPS</label>${selectHTML("f_fps",OPT.fps,s.style.fps)}</div>
+    </div>`);
+
+  /* ENVIRONMENT */
+  html+=sec("02","Environment","ฉากและบรรยากาศ",`
+    <div class="row c2">
+      <div class="field"><label>สถานที่ <span class="req">*</span></label><input type="text" id="f_loc" value="${esc(s.environment.location)}" placeholder="เช่น เยาวราชนีออนยามค่ำคืน"></div>
+      <div class="field"><label>สภาพอากาศ / แสง</label><input type="text" id="f_weather" value="${esc(s.environment.weather)}"></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Atmosphere (รายละเอียดบรรยากาศ)</label></div>
+    <div class="chips" id="atmoChips"></div>
+    <div class="addline">
+      <input type="text" id="atmoInput" placeholder="เพิ่มบรรยากาศ แล้วกด Enter">
+      <button class="btn sm" onclick="addAtmo()">เพิ่ม</button>
+    </div>`);
+
+  /* HUD */
+  html+=sec("03","HUD",isVersus?"แถบสถานะเกม":"ปิดไว้สำหรับงานทั่วไป",`
+    <div class="switch ${s.hud.enabled?"on":""}" id="hudSwitch" onclick="toggleHud()">
+      <span class="track"></span><span>แสดง HUD บนภาพ</span>
+    </div>
+    <div id="hudOptsWrap" style="${s.hud.enabled?"":"display:none"}">
+      <div class="checks" id="hudChecks"></div>
+    </div>`,isVersus);
+
+  /* CHARACTERS */
+  let charBody=`
+    <div class="field"><label>โหมดตัวละคร</label>
+      <div class="seg" style="width:fit-content" id="charModeSeg">
+        <button data-m="versus" class="${isVersus?"on":""}" onclick="setCharMode('versus')">ปะทะ (ซ้าย vs ขวา)</button>
+        <button data-m="single" class="${!isVersus?"on":""}" onclick="setCharMode('single')">เดี่ยว / กลุ่ม</button>
+      </div>
+    </div>`;
+  if(isVersus){
+    charBody+=`<div class="row c2" style="margin-top:14px">
+      <div class="field"><label>ชื่อ ฝั่งซ้าย</label><input type="text" id="f_cLname" value="${esc(s.characters.left.name)}"></div>
+      <div class="field"><label>ชื่อ ฝั่งขวา</label><input type="text" id="f_cRname" value="${esc(s.characters.right.name)}"></div>
+    </div>
+    <div class="row c2">
+      <div class="field"><label>ลักษณะ ฝั่งซ้าย</label><textarea id="f_cLdesc" placeholder="รูปร่าง สี ชุด อาวุธ...">${esc(s.characters.left.description)}</textarea></div>
+      <div class="field"><label>ลักษณะ ฝั่งขวา</label><textarea id="f_cRdesc" placeholder="รูปร่าง สี ชุด อาวุธ...">${esc(s.characters.right.description)}</textarea></div>
+    </div>`;
+  }else{
+    charBody+=`<div class="row" style="margin-top:14px">
+      <div class="field"><label>ชื่อ / หัวข้อ</label><input type="text" id="f_subName" value="${esc(s.characters.subject?s.characters.subject.name:"")}"></div>
+      <div class="field"><label>ลักษณะ</label><textarea id="f_subDesc" placeholder="รูปร่าง สไตล์ การแต่งตัว บุคลิก...">${esc(s.characters.subject?s.characters.subject.description:"")}</textarea></div>
+    </div>`;
+  }
+  charBody+=`<div class="field" style="margin-top:14px">
+      <label>🔒 Character Consistency — ลักษณะคงที่ ที่จะใส่ซ้ำให้ทุกช็อตอัตโนมัติ</label>
+      <textarea id="f_consist" placeholder="เช่น มังกรสีทองมงกุฎเพชร ใบหน้าเหมือนเดิมทุกช็อต ชุดเดิม — กันปัญหา AI เปลี่ยนหน้าตัวละคร">${esc(s.consistency)}</textarea>
+    </div>`;
+  html+=sec("04","Characters","ความคงเส้นคงวา",charBody);
+
+  /* SHOTS */
+  html+=sec("05","Sequence — ทีละช็อต","หัวใจของงาน",`
+    <p style="font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6">
+      💡 Video AI สร้างได้ทีละ ~4–10 วิ ออกแบบเป็น "ช็อต" แล้วยิงทีละช็อต → ตัดต่อรวม (ดูปุ่ม Copy ทีละช็อตในแผงขวา)
+    </p>
+    <div id="shotList"></div>
+    <button class="btn addshot" onclick="addShot()">+ เพิ่มช็อต</button>`);
+
+  /* EXTRAS */
+  html+=sec("06","Ending & Negative","ฉากจบ + สิ่งที่ไม่อยากให้มี",`
+    <div class="field"><label>คำอธิบายฉากจบ</label><textarea id="f_endDesc">${esc(s.ending.description)}</textarea></div>
+    <div class="row c2" style="margin-top:13px">
+      <div class="field"><label>Announcer / ข้อความปิด (คั่นด้วย ,)</label><input type="text" id="f_endAnn" value="${esc((s.ending.announcer||[]).join(", "))}"></div>
+      <div class="field"><label>Final frame</label><input type="text" id="f_endFrame" value="${esc(s.ending.final_frame)}"></div>
+    </div>
+    <div class="field" style="margin-top:13px">
+      <label>⛔ Negative prompt — สิ่งที่ไม่อยากให้มีในภาพ</label>
+      <textarea id="f_neg">${esc(s.negative)}</textarea>
+    </div>`);
+
+  f.innerHTML=html;
+
+  bindGeneral();
+  renderAtmo();
+  renderHudChecks();
+  renderShots();
+}
+
+function selectHTML(id,opts,val){
+  return `<select id="${id}">`+opts.map(o=>`<option ${String(o)===String(val)?"selected":""}>${o}</option>`).join("")+`</select>`;
+}
+function esc(v){return (v==null?"":String(v)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+/* bind static general inputs */
+function bindGeneral(){
+  const map={
+    f_title:v=>state.title=v,
+    f_quality:v=>state.style.visual_quality=v,
+    f_engine:v=>state.style.engine=v,
+    f_genre:v=>state.style.genre=v,
+    f_camera:v=>state.style.camera=v,
+    f_fps:v=>state.style.fps=Number(v),
+    f_loc:v=>state.environment.location=v,
+    f_weather:v=>state.environment.weather=v,
+    f_consist:v=>state.consistency=v,
+    f_endDesc:v=>state.ending.description=v,
+    f_endFrame:v=>state.ending.final_frame=v,
+    f_neg:v=>state.negative=v,
+    f_endAnn:v=>state.ending.announcer=v.split(",").map(x=>x.trim()).filter(Boolean)
+  };
+  Object.entries(map).forEach(([id,fn])=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener("input",()=>{fn(el.value);renderOutput()});
+  });
+  // character fields
+  bindIf("f_cLname",v=>state.characters.left.name=v);
+  bindIf("f_cRname",v=>state.characters.right.name=v);
+  bindIf("f_cLdesc",v=>state.characters.left.description=v);
+  bindIf("f_cRdesc",v=>state.characters.right.description=v);
+  bindIf("f_subName",v=>{state.characters.subject=state.characters.subject||{};state.characters.subject.name=v});
+  bindIf("f_subDesc",v=>{state.characters.subject=state.characters.subject||{};state.characters.subject.description=v});
+  // atmosphere enter key
+  const ai=document.getElementById("atmoInput");
+  if(ai)ai.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addAtmo()}});
+}
+function bindIf(id,fn){const el=document.getElementById(id);if(el)el.addEventListener("input",()=>{fn(el.value);renderOutput()})}
+
+/* atmosphere chips */
+function renderAtmo(){
+  const c=document.getElementById("atmoChips");if(!c)return;
+  c.innerHTML=state.environment.atmosphere.map((a,i)=>
+    `<span class="chip">${esc(a)}<button onclick="delAtmo(${i})">×</button></span>`).join("")
+    || `<span class="tl-empty">ยังไม่มีรายการ</span>`;
+}
+function addAtmo(){
+  const i=document.getElementById("atmoInput");const v=i.value.trim();
+  if(!v)return;state.environment.atmosphere.push(v);i.value="";renderAtmo();renderOutput()
+}
+function delAtmo(i){state.environment.atmosphere.splice(i,1);renderAtmo();renderOutput()}
+
+/* HUD */
+function toggleHud(){
+  state.hud.enabled=!state.hud.enabled;
+  document.getElementById("hudSwitch").classList.toggle("on",state.hud.enabled);
+  document.getElementById("hudOptsWrap").style.display=state.hud.enabled?"":"none";
+  renderOutput();
+}
+function renderHudChecks(){
+  const c=document.getElementById("hudChecks");if(!c)return;
+  c.innerHTML=OPT.hudOpts.map(o=>{
+    const on=state.hud.elements.includes(o);
+    return `<div class="check ${on?"on":""}" onclick="toggleHudEl('${o}')"><span class="box"></span>${o}</div>`;
+  }).join("");
+}
+function toggleHudEl(o){
+  const i=state.hud.elements.indexOf(o);
+  if(i>=0)state.hud.elements.splice(i,1);else state.hud.elements.push(o);
+  renderHudChecks();renderOutput();
+}
+
+/* character mode */
+function setCharMode(m){
+  if(state.characters.mode===m)return;
+  state.characters.mode=m;
+  if(m==="versus"){
+    state.characters.left=state.characters.left||{name:"ตัวละครซ้าย",description:""};
+    state.characters.right=state.characters.right||{name:"ตัวละครขวา",description:""};
+  }else{
+    state.characters.subject=state.characters.subject||{name:"ตัวเอก",description:""};
+  }
+  renderForm();renderOutput();
+}
+
+/* ============ SHOTS ============ */
+function renderShots(){
+  const wrap=document.getElementById("shotList");if(!wrap)return;
+  wrap.innerHTML="";
+  state.shots.forEach((sh,i)=>{
+    const el=document.createElement("div");el.className="shot";
+    const isVersus=state.characters.mode==="versus";
+    el.innerHTML=`
+      <div class="shot-head">
+        <span class="shot-num">${i+1}</span>
+        <input class="shot-title" data-f="title" placeholder="ชื่อช็อต" value="${esc(sh.title)}">
+        <div class="shot-ops">
+          <button class="iconbtn" title="เลื่อนขึ้น" ${i===0?"disabled":""} onclick="moveShot(${i},-1)">↑</button>
+          <button class="iconbtn" title="เลื่อนลง" ${i===state.shots.length-1?"disabled":""} onclick="moveShot(${i},1)">↓</button>
+          <button class="iconbtn" title="ทำซ้ำ" onclick="dupShot(${i})">⎘</button>
+          <button class="iconbtn del" title="ลบ" onclick="delShot(${i})">✕</button>
+        </div>
+      </div>
+      <div class="shot-body">
+        <div class="field"><label>สิ่งที่เกิดขึ้นในช็อต (description)</label>
+          <textarea data-f="description" placeholder="อธิบายการเคลื่อนไหว/เหตุการณ์ให้ละเอียดเชิงภาพ">${esc(sh.description)}</textarea></div>
+        <div class="shot-meta">
+          <div class="field"><label>มุมกล้อง</label><select data-f="camera">${camOpts(sh.camera)}</select></div>
+          <div class="field"><label>เสียง / SFX / Announcer</label><input type="text" data-f="audio" value="${esc(sh.audio||"")}"></div>
+        </div>
+        <div class="shot-foot">
+          <div class="dur"><label style="font-size:11px;color:var(--muted)">⏱</label>
+            <input type="number" min="1" max="60" data-f="duration" value="${sh.duration||5}"><span>วินาที</span></div>
+          ${isVersus?`<div class="dur"><label style="font-size:11px;color:var(--muted)">Combo</label>
+            <input type="number" min="0" data-f="counter" value="${sh.counter||0}"></div>`:""}
+          <div style="flex:1;min-width:140px">
+            <input type="text" placeholder="เพิ่ม effect แล้ว Enter" data-eff="${i}" style="font-size:12px">
+          </div>
+        </div>
+        <div class="chips" data-effchips="${i}"></div>
+      </div>`;
+    wrap.appendChild(el);
+
+    // bind shot fields
+    el.querySelectorAll("[data-f]").forEach(inp=>{
+      inp.addEventListener("input",()=>{
+        const f=inp.dataset.f;
+        let v=inp.value;
+        if(f==="duration"||f==="counter")v=Number(v)||0;
+        state.shots[i][f]=v;
+        if(f==="title")el.querySelector(".shot-num"); // no-op
+        renderOutput();
+      });
+    });
+    // effect input
+    const effIn=el.querySelector("[data-eff]");
+    effIn.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){e.preventDefault();const v=effIn.value.trim();if(v){sh.effects=sh.effects||[];sh.effects.push(v);effIn.value="";renderEffChips(i);renderOutput()}}
+    });
+    renderEffChips(i);
+  });
+}
+function camOpts(val){
+  // build <option> list ensuring current value present
+  const opts=OPT.camera.slice();
+  if(val&&!opts.includes(val))opts.unshift(val);
+  return opts.map(o=>`<option ${o===val?"selected":""}>${o}</option>`).join("");
+}
+function renderEffChips(i){
+  const c=document.querySelector(`[data-effchips="${i}"]`);if(!c)return;
+  const eff=state.shots[i].effects||[];
+  c.innerHTML=eff.map((e,j)=>`<span class="chip">${esc(e)}<button onclick="delEff(${i},${j})">×</button></span>`).join("");
+}
+function delEff(i,j){state.shots[i].effects.splice(j,1);renderEffChips(i);renderOutput()}
+function addShot(){
+  state.shots.push({id:nextId(),title:"ช็อตใหม่",description:"",duration:5,camera:OPT.camera[0],audio:"",counter:0,effects:[]});
+  renderShots();renderOutput();
+  document.querySelector("#shotList .shot:last-child")?.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function dupShot(i){
+  const copy=deepClone(state.shots[i]);copy.id=nextId();copy.title=(copy.title||"")+" (สำเนา)";
+  state.shots.splice(i+1,0,copy);renderShots();renderOutput();
+}
+function delShot(i){
+  if(state.shots.length<=1){toast("ต้องมีอย่างน้อย 1 ช็อต","#E5654B");return}
+  state.shots.splice(i,1);renderShots();renderOutput();
+}
+function moveShot(i,dir){
+  const j=i+dir;if(j<0||j>=state.shots.length)return;
+  [state.shots[i],state.shots[j]]=[state.shots[j],state.shots[i]];
+  renderShots();renderOutput();
+}
+
+/* ============ BUILD JSON ============ */
+function clean(o){
+  if(Array.isArray(o)){const a=o.map(clean).filter(v=>v!==undefined&&v!=="");return a.length?a:undefined}
+  if(o&&typeof o==="object"){const r={};for(const k in o){const v=clean(o[k]);if(v!==undefined&&v!=="")r[k]=v}return Object.keys(r).length?r:undefined}
+  return o;
+}
+function buildObject(){
+  const s=state;
+  const langMap={thai:"Thai (ภาษาไทย)",english:"English",mixed:"Thai + English mixed"};
+  let chars;
+  if(s.characters.mode==="versus"){
+    chars={left:{name:s.characters.left.name,description:s.characters.left.description},
+           right:{name:s.characters.right.name,description:s.characters.right.description}};
+  }else{
+    chars={subject:{name:s.characters.subject?.name,description:s.characters.subject?.description}};
+  }
+  const obj={
+    title:s.title,
+    output_language:langMap[s.language],
+    style:{
+      visual_quality:s.style.visual_quality,engine:s.style.engine,genre:s.style.genre,
+      camera:s.style.camera,aspect_ratio:s.aspect,fps:s.style.fps
+    },
+    environment:{location:s.environment.location,weather:s.environment.weather,atmosphere:s.environment.atmosphere},
+    hud:s.hud.enabled?{enabled:true,elements:s.hud.elements}:undefined,
+    characters:chars,
+    character_consistency:s.consistency,
+    negative_prompt:s.negative,
+    shots:s.shots.map((sh,i)=>clean({
+      shot:i+1,title:sh.title,description:sh.description,
+      duration_seconds:sh.duration,camera:sh.camera,audio:sh.audio,
+      combo_counter:(s.characters.mode==="versus"&&sh.counter)?sh.counter:undefined,
+      effects:sh.effects
+    })),
+    ending:{description:s.ending.description,pose:s.ending.pose,announcer:s.ending.announcer,final_frame:s.ending.final_frame}
+  };
+  return clean(obj)||{};
+}
+/* self-contained per-shot object */
+function buildShotObject(i){
+  const s=state,sh=state.shots[i];
+  const langMap={thai:"Thai (ภาษาไทย)",english:"English",mixed:"Thai + English mixed"};
+  let chars;
+  if(s.characters.mode==="versus")chars={left:s.characters.left,right:s.characters.right};
+  else chars={subject:s.characters.subject};
+  return clean({
+    title:s.title?`${s.title} — Shot ${i+1}`:`Shot ${i+1}`,
+    output_language:langMap[s.language],
+    style:{visual_quality:s.style.visual_quality,engine:s.style.engine,genre:s.style.genre,camera:sh.camera||s.style.camera,aspect_ratio:s.aspect,fps:s.style.fps},
+    environment:{location:s.environment.location,weather:s.environment.weather,atmosphere:s.environment.atmosphere},
+    characters:chars,
+    character_consistency:s.consistency,
+    negative_prompt:s.negative,
+    shot:clean({description:sh.description,duration_seconds:sh.duration,camera:sh.camera,audio:sh.audio,effects:sh.effects})
+  })||{};
+}
+
+/* JSON syntax highlight */
+function hl(json){
+  return esc(json)
+    .replace(/&quot;([^&]+?)&quot;(\s*:)/g,'<span class="k">&quot;$1&quot;</span>$2')
+    .replace(/:\s*&quot;([^&]*?)&quot;/g,': <span class="s">&quot;$1&quot;</span>')
+    .replace(/:\s*(-?\d+\.?\d*)/g,': <span class="n">$1</span>')
+    .replace(/:\s*(true|false|null)/g,': <span class="b">$1</span>');
+}
+
+/* text prompt */
+function buildText(){
+  const s=state,o=buildObject();
+  const L=[];
+  L.push(`[${s.style.visual_quality}, ${s.style.engine}, ${s.aspect}, ${s.style.fps}fps — ${s.style.genre}]`);
+  if(s.title)L.push(`Title: ${s.title}.`);
+  L.push(`Language: ${({thai:"Thai",english:"English",mixed:"Thai+English"})[s.language]}.`);
+  L.push(`Scene: ${s.environment.location||"-"} | ${s.environment.weather||""}. ${(s.environment.atmosphere||[]).join(", ")}.`);
+  if(s.characters.mode==="versus")
+    L.push(`Characters: LEFT = ${s.characters.left.name} (${s.characters.left.description||"-"}) VS RIGHT = ${s.characters.right.name} (${s.characters.right.description||"-"}).`);
+  else
+    L.push(`Subject: ${s.characters.subject?.name||"-"} (${s.characters.subject?.description||"-"}).`);
+  if(s.consistency)L.push(`Keep consistent across all shots: ${s.consistency}.`);
+  L.push("");
+  s.shots.forEach((sh,i)=>{
+    L.push(`Shot ${i+1} — ${sh.title} (${sh.duration||0}s, camera: ${sh.camera||"-"}): ${sh.description||"-"}.`+
+      (sh.audio?` Audio: ${sh.audio}.`:"")+((sh.effects&&sh.effects.length)?` FX: ${sh.effects.join(", ")}.`:""));
+  });
+  L.push("");
+  L.push(`Ending: ${s.ending.description||"-"}.`+((s.ending.announcer&&s.ending.announcer.length)?` Announcer: ${s.ending.announcer.join(", ")}.`:"")+` Final frame: ${s.ending.final_frame||"-"}.`);
+  if(s.negative)L.push(`AVOID: ${s.negative}.`);
+  return L.join("\n");
+}
+
+/* ============ OUTPUT RENDER ============ */
+function totalDuration(){return state.shots.reduce((a,b)=>a+(Number(b.duration)||0),0)}
+
+function renderTimeline(){
+  document.getElementById("totalDur").textContent=totalDuration()+"s";
+  const strip=document.getElementById("tlStrip");
+  if(!state.shots.length){strip.innerHTML='<span class="tl-empty">ยังไม่มีช็อต</span>';return}
+  const total=Math.max(totalDuration(),1);
+  strip.innerHTML=state.shots.map((sh,i)=>{
+    const w=Math.max(((Number(sh.duration)||1)/total)*100,7);
+    return `<div class="tl-seg" style="flex:${w} 1 0;" title="${esc(sh.title)} — ${sh.duration||0}s"><span>${i+1}</span></div>`;
+  }).join("");
+}
+
+function validate(){
+  const w=[];
+  if(!state.title)w.push("ยังไม่ได้ใส่ชื่อเรื่อง");
+  if(!state.environment.location)w.push("ยังไม่ได้ใส่สถานที่");
+  const shorty=state.shots.filter(s=>!s.description||s.description.trim().split(/\s+/).length<6).length;
+  if(shorty)w.push(`มี ${shorty} ช็อตที่ description สั้น/ว่าง (AI ชอบรายละเอียดเชิงภาพ)`);
+  if(totalDuration()>60)w.push(`ความยาวรวม ${totalDuration()}s — แนะนำยิงทีละช็อตแล้วตัดต่อ`);
+  return w;
+}
+
+function renderOutput(){
+  renderTimeline();
+  // warnings
+  const wb=document.getElementById("warnbar");
+  const w=validate();
+  if(w.length){wb.classList.add("show");wb.innerHTML="<b>เช็คก่อนใช้:</b> "+w.join(" · ")}
+  else wb.classList.remove("show");
+
+  const body=document.getElementById("outBody");
+  const foot=document.getElementById("outFoot");
+
+  if(outTab==="json"){
+    const json=JSON.stringify(buildObject(),null,2);
+    body.innerHTML=`<pre class="code">${hl(json)}</pre>`;
+    foot.innerHTML=`<button class="btn gold" onclick="copyJSON()">📋 Copy JSON ทั้งหมด</button>`;
+  }
+  else if(outTab==="shots"){
+    body.innerHTML=state.shots.map((sh,i)=>{
+      const json=JSON.stringify(buildShotObject(i),null,2);
+      return `<div class="clip">
+        <div class="clip-head"><span class="cn">SHOT ${i+1}</span><span class="ct">${esc(sh.title)}</span>
+          <span class="cd">${sh.duration||0}s</span>
+          <button class="iconbtn" title="คัดลอกช็อตนี้" onclick="copyShot(${i})">📋</button></div>
+        <pre>${hl(json)}</pre></div>`;
+    }).join("");
+    foot.innerHTML=`<button class="btn" onclick="copyAllShots()">คัดลอกทุกช็อต (คั่นบรรทัด)</button>`;
+  }
+  else if(outTab==="text"){
+    body.innerHTML=`<div class="textprompt">${esc(buildText())}</div>`;
+    foot.innerHTML=`<button class="btn gold" onclick="copyText()">📋 Copy Prompt ข้อความ</button>`;
+  }
+  else if(outTab==="presets"){
+    renderPresetStore(body,foot);
+  }
+}
+
+/* ============ COPY / EXPORT ============ */
+function doCopy(txt,msg){
+  navigator.clipboard.writeText(txt).then(()=>toast(msg||"คัดลอกแล้ว")).catch(()=>{
+    // fallback
+    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");toast(msg||"คัดลอกแล้ว")}catch(e){toast("คัดลอกไม่สำเร็จ","#E5654B")}
+    ta.remove();
+  });
+}
+function copyJSON(){doCopy(JSON.stringify(buildObject(),null,2),"คัดลอก JSON แล้ว ✓")}
+function copyShot(i){doCopy(JSON.stringify(buildShotObject(i),null,2),`คัดลอก Shot ${i+1} แล้ว ✓`)}
+function copyAllShots(){
+  const all=state.shots.map((_,i)=>JSON.stringify(buildShotObject(i),null,2)).join("\n\n/* ───── ช็อตถัดไป ───── */\n\n");
+  doCopy(all,"คัดลอกทุกช็อตแล้ว ✓");
+}
+function copyText(){doCopy(buildText(),"คัดลอก Prompt ข้อความแล้ว ✓")}
+
+function exportJSON(){
+  const data={__app:"ai-video-prompt-builder",__v:1,preset:activePreset,state:state};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=(state.title||"video-prompt").replace(/[^\w\u0E00-\u0E7F-]+/g,"_").slice(0,40)+".json";
+  a.click();URL.revokeObjectURL(a.href);toast("ดาวน์โหลดไฟล์ .json แล้ว ✓");
+}
+
+/* import: file or paste */
+function importFromText(txt){
+  let parsed;
+  try{parsed=JSON.parse(txt)}catch(e){toast("JSON ไม่ถูกต้อง อ่านไม่ได้","#E5654B");return}
+  // accept either our wrapper, or a raw prompt JSON (best-effort map)
+  if(parsed.__app==="ai-video-prompt-builder"&&parsed.state){
+    state=parsed.state;activePreset=parsed.preset||"fatality";
+    state.shots.forEach(s=>{if(!s.id)s.id=nextId()});
+    syncSegs();renderAll();toast("โหลดงานกลับมาแล้ว ✓");return;
+  }
+  // best-effort: raw video-prompt JSON
+  const mapped=mapRawJSON(parsed);
+  if(mapped){state=mapped;syncSegs();renderAll();toast("Import JSON เข้าฟอร์มแล้ว ✓")}
+  else toast("รูปแบบ JSON ไม่ตรง ลองตรวจดูอีกที","#E5654B");
+}
+function mapRawJSON(p){
+  try{
+    const st=PRESETS.fatality;
+    const versus=p.characters&&(p.characters.left||p.characters.right);
+    const shotsSrc=p.shots||p.combo_sequence||[];
+    const s={
+      preset:activePreset||"fatality",
+      title:p.title||"",
+      language:state?state.language:"mixed",
+      style:{
+        visual_quality:p.style?.visual_quality||st.style.visual_quality,
+        engine:p.style?.engine||st.style.engine,
+        genre:p.style?.genre||st.style.genre,
+        camera:p.style?.camera||st.style.camera,
+        fps:p.style?.fps||60
+      },
+      aspect:p.style?.aspect_ratio||"16:9",
+      environment:{
+        location:p.environment?.location||"",
+        weather:p.environment?.weather||"",
+        atmosphere:p.environment?.atmosphere||[]
+      },
+      hud:{enabled:!!(p.hud&&p.hud.enabled),elements:p.hud?.elements||[]},
+      characters:versus
+        ?{mode:"versus",left:{name:p.characters.left?.name||"",description:p.characters.left?.description||""},right:{name:p.characters.right?.name||"",description:p.characters.right?.description||""}}
+        :{mode:"single",subject:{name:p.characters?.subject?.name||p.characters?.name||"",description:p.characters?.subject?.description||""}},
+      consistency:p.character_consistency||"",
+      negative:p.negative_prompt||"",
+      shots:(shotsSrc.length?shotsSrc:[{}]).map((sh,i)=>({
+        id:nextId(),
+        title:sh.title||("ช็อต "+(i+1)),
+        description:sh.description||"",
+        duration:sh.duration_seconds||sh.duration||5,
+        camera:sh.camera||"",
+        audio:sh.audio||"",
+        counter:(typeof sh.combo_counter==="number"?sh.combo_counter:0),
+        effects:sh.effects||[]
+      })),
+      ending:{
+        description:p.ending?.description||"",
+        pose:p.ending?.barbigon_pose||p.ending?.pose||[],
+        announcer:Array.isArray(p.ending?.announcer)?p.ending.announcer:(p.ending?.announcer?[p.ending.announcer]:[]),
+        final_frame:p.ending?.final_frame||""
+      }
+    };
+    return s;
+  }catch(e){return null}
+}
+function syncSegs(){setSeg("aspectSeg","a",state.aspect);setSeg("langSeg","l",state.language)}
+
+/* ============ PRESET STORE (localStorage) ============ */
+const LS_KEY="aivpb_presets";
+function getStore(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch(e){return[]}}
+function setStore(a){try{localStorage.setItem(LS_KEY,JSON.stringify(a))}catch(e){toast("เบราว์เซอร์บล็อก storage","#E5654B")}}
+function savePreset(){
+  const name=prompt("ตั้งชื่องานที่จะเก็บ:",state.title||"งานใหม่");
+  if(!name)return;
+  const store=getStore();
+  store.unshift({name,date:new Date().toLocaleString("th-TH",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}),preset:activePreset,state:deepClone(state)});
+  setStore(store);renderOutput();toast("เก็บงานแล้ว ✓");
+}
+function loadStored(idx){
+  const store=getStore();const item=store[idx];if(!item)return;
+  state=item.state;activePreset=item.preset||"fatality";
+  state.shots.forEach(s=>{if(!s.id)s.id=nextId()});
+  syncSegs();renderAll();outTab="json";syncOutTabs();toast("โหลดงาน \""+item.name+"\" แล้ว ✓");
+}
+function delStored(idx){
+  const store=getStore();store.splice(idx,1);setStore(store);renderOutput();
+}
+function renderPresetStore(body,foot){
+  const store=getStore();
+  body.innerHTML=`<div class="presets-store" style="padding:14px 16px">
+    <p style="font-size:11.5px;color:var(--muted);line-height:1.6">เก็บงานไว้ในเบราว์เซอร์เครื่องนี้ (localStorage) — อยากสำรองข้ามเครื่องให้กดปุ่ม .json มุมขวาบน</p>
+    <div class="pstore-list">${
+      store.length?store.map((it,i)=>`<div class="pstore-item">
+        <div style="flex:1;min-width:0"><div class="pn">${esc(it.name)}</div><div class="pmeta">${ICONS[it.preset]||""} ${esc(it.date||"")}</div></div>
+        <button class="btn sm" onclick="loadStored(${i})">โหลด</button>
+        <button class="iconbtn del" onclick="delStored(${i})">✕</button>
+      </div>`).join(""):`<div class="empty-note">ยังไม่มีงานที่เก็บไว้<br>กด "เก็บงานนี้" ด้านล่าง</div>`
+    }</div>
+  </div>`;
+  foot.innerHTML=`<button class="btn gold" onclick="savePreset()">💾 เก็บงานนี้</button>`;
+}
+
+/* ============ TABS / SEGMENTS ============ */
+function syncOutTabs(){document.querySelectorAll("#outTabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===outTab))}
+function initOutTabs(){
+  document.querySelectorAll("#outTabs button").forEach(b=>{
+    b.onclick=()=>{outTab=b.dataset.t;syncOutTabs();renderOutput()};
+  });
+}
+function initSegs(){
+  document.querySelectorAll("#aspectSeg button").forEach(b=>{
+    b.onclick=()=>{state.aspect=b.dataset.a;setSeg("aspectSeg","a",state.aspect);renderOutput()};
+  });
+  document.querySelectorAll("#langSeg button").forEach(b=>{
+    b.onclick=()=>{state.language=b.dataset.l;setSeg("langSeg","l",state.language);renderOutput()};
+  });
+}
+
+/* ============ TOAST ============ */
+let toastT;
+function toast(msg,color){
+  const t=document.getElementById("toast");
+  document.getElementById("toastMsg").textContent=msg;
+  t.querySelector(".dot").style.background=color||"#5BC98C";
+  t.classList.add("show");clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ============ MASTER RENDER ============ */
+function renderAll(){renderPresetBar();renderForm();renderOutput()}
+
+/* ============ INIT ============ */
+document.getElementById("exportBtn").onclick=exportJSON;
+document.getElementById("importBtn").onclick=()=>{
+  const txt=prompt("วาง JSON ที่นี่ (รองรับไฟล์งานที่ export ไว้ หรือ JSON prompt แบบเดิม):");
+  if(txt)importFromText(txt);
+};
+document.getElementById("fileInput").onchange=e=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();r.onload=()=>importFromText(r.result);r.readAsText(file);e.target.value="";
+};
+initOutTabs();initSegs();loadPreset("fatality");
+</script>
+</body>
+</html>
