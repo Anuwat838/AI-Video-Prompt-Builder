@@ -329,7 +329,7 @@ pre.code{
 "use strict";
 
 /* ============ PRESET DEFINITIONS ============ */
-const ICONS={fatality:"🥊",ad:"🍜",story:"🎬",music:"🎵",ugc:"📱"};
+const ICONS={fatality:"🥊",ad:"🍜",story:"🎬",music:"🎵",ugc:"📱",cute:"🧸"};
 const PRESETS={
   fatality:{
     label:"Fighting / Fatality", desc:"เกมต่อสู้ ท่าจบอลังการ",
@@ -402,6 +402,23 @@ const PRESETS={
       {title:"ปิดท้าย CTA",description:"สรุปและชวนกด follow / ลองใช้",duration:4,camera:"Back to selfie",audio:"ชวนติดตาม",counter:0,effects:[]}
     ],
     ending:{description:"เฟรมจบพร้อมข้อความชวนติดตาม",pose:[],announcer:[],final_frame:"Text card"}
+  },
+  cute:{
+    label:"ตุ๊กตาสู้กันน่ารัก", desc:"หมา vs แมว ขำๆ น่ารัก",
+    style:{visual_quality:"Soft cute 3D, Pixar-like, นุ่มฟู",engine:"3D animated stylized",genre:"Cute Plushie Comedy Battle",camera:"Playful bouncy cartoon",fps:30},
+    aspect:"16:9",
+    env:{location:"สนามประลองในห้องนั่งเล่นน่ารัก โทนพาสเทล",weather:"แสงนุ่มอุ่นๆ",atmosphere:["หมอนปุยและของเล่นวางรอบสนาม","แสงพาสเทลนุ่มตา","มีหัวใจเล็กๆลอยรอบ","บรรยากาศสนุกสดใส ไม่มีความรุนแรง"]},
+    hud:{enabled:true,elements:["Health Bars","Character Portraits","Combo Counter"]},
+    chars:{mode:"versus",
+      left:{name:"น้องหมาตุ๊กตา",description:"ตุ๊กตาหมาอ้วนกลม ขนปุยฟู ตากลมโต แก้มป่อง ดูนุ่มน่ากอด สีน้ำตาลครีม"},
+      right:{name:"น้องแมวตุ๊กตา",description:"ตุ๊กตาแมวอ้วนกลม ขนฟูนุ่ม ตากลมโต หางพอง ดูขี้อ้อน สีเทาขาว"}},
+    shots:[
+      {title:"เปิดฉากท้าทายน่ารัก",description:"ตุ๊กตาสองตัวเด้งดึ๋งเข้าหากัน ทำท่าขู่แบบขำๆ พองตัวอวดความน่ารัก แล้วชนพุงป่องกันเบาๆ เด้งถอยหลัง",duration:5,camera:"Bouncy push-in",audio:"เสียงตุ๊กตาเด้ง 'ปุๆ' น่ารัก + เสียงร้องอ้อนๆ",counter:3,effects:["หัวใจเด้งออกมา","ดาวกลมๆหมุน"]},
+      {title:"คอมโบตบเบาๆ",description:"น้องหมาเอาอุ้งเท้านุ่มๆตบเบาๆรัวๆ น้องแมวหมุนตัวฟาดหางฟูๆกลับ ทั้งคู่ล้มกลิ้งบนหมอนแบบขำๆ",duration:6,camera:"Spin around playful",audio:"เสียง 'ตุบ ตุบ' นุ่มๆ + เสียงหัวเราะ",counter:12,effects:["ปุยขนปลิว","หัวใจกระจาย"]},
+      {title:"ท่าไม้ตายจั๊กจี้",description:"น้องตัวหนึ่งกระโดดกอดอีกตัวแล้วจั๊กจี้ อีกตัวดิ้นหัวเราะกลิ้งไปมา ปุยฟุ้งเต็มจอ",duration:5,camera:"Tumble follow",audio:"เสียงหัวเราะคิกคัก น่ารัก",counter:25,effects:["ฟองสบู่หัวใจ","ประกายน่ารัก"]}
+    ],
+    ending:{description:"ทั้งคู่เหนื่อยล้มนอนเคียงกันบนหมอน แล้วหันมากอดกันเป็นเพื่อน หัวใจลอยเต็มจอ",pose:["กอดกันกลมๆ","ยิ้มหวานใส่กล้อง"],announcer:["เสมอกัน!","น่ารักทั้งคู่ ♥"],final_frame:"จบที่หัวใจค่อยๆลอยขึ้น เฟรมอบอุ่น"},
+    neg:"ห้ามรุนแรง ห้ามเลือด ห้ามดูน่ากลัว ห้ามสมจริงแบบสยอง, ห้ามตาดุ ห้ามเขี้ยว, ห้ามภาพเบลอ, ห้ามตัวหนังสือเพี้ยน, ให้ดูนุ่มฟูน่ารักตลอด"
   }
 };
 
@@ -436,7 +453,7 @@ function loadPreset(key){
     hud:deepClone(p.hud),
     characters:deepClone(p.chars),
     consistency:"",
-    negative:"ห้ามนิ้วเกิน, ห้ามตัวหนังสือเพี้ยน, ห้ามภาพเบลอ, ห้ามใบหน้าผิดรูป",
+    negative:p.neg||"ห้ามนิ้วเกิน, ห้ามตัวหนังสือเพี้ยน, ห้ามภาพเบลอ, ห้ามใบหน้าผิดรูป",
     shots:p.shots.map(s=>Object.assign({id:nextId(),effects:[]},deepClone(s))),
     ending:deepClone(p.ending)
   };
