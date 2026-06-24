@@ -119,6 +119,15 @@ select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=
 .addline{display:flex;gap:8px;margin-top:9px}
 .addline input{flex:1}
 
+/* scene picker (loop presets) */
+.scene-pick{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 4px}
+.scene-chip{
+  background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;font-size:12px;cursor:pointer;color:var(--text);
+  font-family:inherit;transition:.13s;text-align:left;line-height:1.3}
+.scene-chip:hover{border-color:var(--border2);background:var(--panel3)}
+.scene-chip.on{border-color:var(--cyan);background:linear-gradient(180deg,rgba(79,209,224,.12),transparent);color:var(--cyan)}
+
 /* toggle checkboxes (hud) */
 .checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .check{
@@ -329,7 +338,7 @@ pre.code{
 "use strict";
 
 /* ============ PRESET DEFINITIONS ============ */
-const ICONS={fatality:"🥊",ad:"🍜",story:"🎬",music:"🎵",ugc:"📱",cute:"🧸"};
+const ICONS={fatality:"🥊",ad:"🍜",story:"🎬",music:"🎵",ugc:"📱",cute:"🧸",lofi:"🎧"};
 const PRESETS={
   fatality:{
     label:"Fighting / Fatality", desc:"เกมต่อสู้ ท่าจบอลังการ",
@@ -419,13 +428,34 @@ const PRESETS={
     ],
     ending:{description:"ทั้งคู่เหนื่อยล้มนอนเคียงกันบนหมอน แล้วหันมากอดกันเป็นเพื่อน หัวใจลอยเต็มจอ",pose:["กอดกันกลมๆ","ยิ้มหวานใส่กล้อง"],announcer:["เสมอกัน!","น่ารักทั้งคู่ ♥"],final_frame:"จบที่หัวใจค่อยๆลอยขึ้น เฟรมอบอุ่น"},
     neg:"ห้ามรุนแรง ห้ามเลือด ห้ามดูน่ากลัว ห้ามสมจริงแบบสยอง, ห้ามตาดุ ห้ามเขี้ยว, ห้ามภาพเบลอ, ห้ามตัวหนังสือเพี้ยน, ให้ดูนุ่มฟูน่ารักตลอด"
+  },
+  lofi:{
+    label:"LoFi Loop", desc:"ลูปเพลงชิลล์ ไร้รอยต่อ",
+    style:{visual_quality:"Anime / Stylized",engine:"2D anime",genre:"LoFi Aesthetic Loop",camera:"Static locked",fps:24},
+    aspect:"16:9",
+    env:{location:"ห้องทำงานยามค่ำคืน มองเห็นฝนตกนอกหน้าต่าง",weather:"ฝนพรำ แสงโคมไฟอุ่น",atmosphere:["ไอควันจากแก้วกาแฟลอยขึ้นช้าๆ","หยดน้ำฝนไหลบนกระจกเป็นจังหวะ","แสงนีออนเมืองเบลอๆไกลๆ","โทนสีอุ่นนุ่มตา ผ่อนคลาย"]},
+    hud:{enabled:false,elements:[]},
+    chars:{mode:"single",subject:{name:"ตัวละคร/สิ่งของในฉาก (ถ้ามี)",description:"เช่น เด็กสาวใส่หูฟังนั่งทำงานนิ่งๆ หรือแมวนอนขด — อยู่กับที่ หายใจเบาๆ ไม่ลุกไปไหน"}},
+    shots:[
+      {title:"Loop ต่อเนื่อง (กล้องล็อกนิ่ง)",description:"กล้องล็อกนิ่งสนิทบนขาตั้ง ฉากเดิมตลอดคลิป มีเฉพาะการเคลื่อนไหวแบบวนซ้ำที่กลับมาที่จุดเริ่ม เช่น ฝนตกต่อเนื่อง ไอควันลอยขึ้นช้าๆ ม่านไหวเบาๆ แสงกระพริบนุ่มๆ — สถานะตอนจบเหมือนตอนเริ่มเป๊ะ เพื่อให้วนต่อไร้รอยต่อ",duration:12,camera:"Static locked",audio:"ambient เบาๆ (ตั้งใจ mute แล้วทับด้วยเพลง LoFi เอง)",counter:0,effects:["ฝน/ไอควัน/อนุภาคลอย วนซ้ำต่อเนื่อง","แสงอุ่นนุ่มคงที่"]}
+    ],
+    ending:{description:"เฟรมสุดท้ายต้องตรงกับเฟรมแรกเป๊ะ — ตำแหน่งเดิม แสงเดิม สีเดิม เพื่อเป็นจุดวน loop ที่ไร้รอยต่อ",pose:[],announcer:[],final_frame:"Match first frame exactly (seamless loop point)"},
+    neg:"ห้ามกล้องขยับ ห้าม zoom/pan/หมุน ห้ามกล้องสั่น, ห้ามตัดฉาก ห้าม jump cut ห้าม transition กระชาก, ห้ามมีคนเดินเข้า/ออกเฟรม, ห้ามการเคลื่อนไหวเร็วหรือฉับพลัน ห้ามภาพ morph/warp/วูบวาบ, ห้ามแสงเปลี่ยนกะทันหัน, ห้ามตัวหนังสือ ห้ามลายน้ำ/โลโก้, ให้แสงและสีคงที่สม่ำเสมอตลอดคลิปเพื่อให้วน loop ได้เนียน",
+    scenes:[
+      {label:"🌧️ ห้องทำงานค่ำคืน ฝนตก",location:"ห้องทำงานยามค่ำคืน มองเห็นฝนตกนอกหน้าต่าง",weather:"ฝนพรำ แสงโคมไฟอุ่น",atmosphere:["ไอควันจากแก้วกาแฟลอยขึ้นช้าๆ","หยดน้ำฝนไหลบนกระจกเป็นจังหวะ","แสงนีออนเมืองเบลอๆไกลๆ","โทนสีอุ่นนุ่มตา ผ่อนคลาย"]},
+      {label:"☕ คาเฟ่ริมกระจก ฝนพรำ",location:"มุมคาเฟ่อบอุ่นริมหน้าต่างกระจก",weather:"ฝนพรำนอกร้าน แสงวอร์มในร้าน",atmosphere:["ไอควันกาแฟลอยขึ้นวนช้าๆ","หยดฝนบนกระจกไหลเป็นจังหวะ","แสงไฟในร้านนุ่มอุ่น","บรรยากาศชิลล์ ผ่อนคลาย"]},
+      {label:"🐱 ห้องนอนโคมไฟ แมวหลับ",location:"ห้องนอนอบอุ่น โคมไฟตั้งโต๊ะ",weather:"กลางคืน แสงโคมไฟส้มอุ่น",atmosphere:["แมวนอนขดหายใจขึ้นลงช้าๆ","ผ้าม่านไหวเบาๆจากลม","แสงไฟกระพริบนุ่มๆ","ต้นไม้ในกระถางเล็กๆ"]},
+      {label:"🌃 ระเบียงวิวเมืองกลางคืน",location:"ระเบียงห้องมองวิวเมืองยามค่ำคืน",weather:"กลางคืน ท้องฟ้าครึ้ม",atmosphere:["ไฟเมืองนีออนกระพริบไกลๆ","ไอหมอกบางลอยช้าๆ","ต้นไม้ระเบียงไหวเบาๆ","โทนน้ำเงินม่วงผสมส้มอุ่น"]},
+      {label:"🌅 ริมทะเลพระอาทิตย์ตก",location:"ระเบียงริมทะเลตอนพระอาทิตย์ตก",weather:"ช่วง golden hour แสงส้มทอง",atmosphere:["คลื่นซัดเข้าฝั่งเบาๆเป็นจังหวะ","ต้นมะพร้าวไหวตามลม","แสงทองวิบวับบนผิวน้ำ","บรรยากาศอบอุ่นผ่อนคลาย"]},
+      {label:"📚 โต๊ะกาแฟไอควันลอย",location:"โคลสอัพโต๊ะไม้ มีแก้วกาแฟ หนังสือ ต้นไม้เล็ก",weather:"แสงวอร์มนุ่มจากด้านข้าง",atmosphere:["ไอควันกาแฟลอยขึ้นวนช้าๆ","ฝุ่นละอองลอยในลำแสง","หน้ากระดาษหนังสือไหวเบาๆ","โทนวินเทจอุ่น"]}
+    ]
   }
 };
 
 /* dropdown option banks */
 const OPT={
   quality:["Ultra-realistic AAA","Cinematic film grade","Stylized cinematic","Natural realistic","Anime / Stylized","Hyperrealistic"],
-  engine:["Unreal Engine 5","Photorealistic","Photorealistic + VFX","Octane render","3D animated"],
+  engine:["Unreal Engine 5","Photorealistic","Photorealistic + VFX","Octane render","3D animated","2D anime","Pixel art"],
   camera:["Dolly in fast","Tracking shot","Slow push-in","Handheld close-up","Wide establishing","Crane up","Crane out","Orbit / arc","Extreme zoom","Punch-in","Beat-synced cuts","Selfie handheld","Static locked"],
   fps:[24,30,60],
   hudOpts:["Health Bars","Character Portraits","Special Meters","Combo Counter","Damage Numbers","Score","Timer","Round Indicator"]
@@ -525,7 +555,12 @@ function renderForm(){
     </div>`);
 
   /* ENVIRONMENT */
+  const _scenes=(PRESETS[activePreset]||{}).scenes;
+  const scenePickerHTML=_scenes?`
+    <div class="field" style="margin-bottom:2px"><label>🎬 เลือกฉากสำเร็จรูป — กดเลือก หรือพิมพ์เองในช่อง "สถานที่" ด้านล่างก็ได้</label></div>
+    <div class="scene-pick">${_scenes.map((sc,i)=>`<button type="button" class="scene-chip${sc.location===s.environment.location?" on":""}" onclick="pickScene(${i})">${sc.label}</button>`).join("")}</div>`:"";
   html+=sec("02","Environment","ฉากและบรรยากาศ",`
+    ${scenePickerHTML}
     <div class="row c2">
       <div class="field"><label>สถานที่ <span class="req">*</span></label><input type="text" id="f_loc" value="${esc(s.environment.location)}" placeholder="เช่น เยาวราชนีออนยามค่ำคืน"></div>
       <div class="field"><label>สภาพอากาศ / แสง</label><input type="text" id="f_weather" value="${esc(s.environment.weather)}"></div>
@@ -654,6 +689,16 @@ function addAtmo(){
   if(!v)return;state.environment.atmosphere.push(v);i.value="";renderAtmo();renderOutput()
 }
 function delAtmo(i){state.environment.atmosphere.splice(i,1);renderAtmo();renderOutput()}
+
+/* scene picker — กดเลือกฉากสำเร็จรูป (ใช้กับ preset ที่มี scenes เช่น LoFi) */
+function pickScene(i){
+  const sc=(PRESETS[activePreset]||{}).scenes;
+  if(!sc||!sc[i])return;
+  state.environment.location=sc[i].location;
+  state.environment.weather=sc[i].weather;
+  state.environment.atmosphere=deepClone(sc[i].atmosphere);
+  renderForm();renderOutput();
+}
 
 /* HUD */
 function toggleHud(){
